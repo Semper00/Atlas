@@ -1,0 +1,8 @@
+C:\Users\Core\Documents\Atlas\Atlas.Injector\bin\Debug\Atlas.Injector.exe
+C:\Users\Core\Documents\Atlas\Atlas.Injector\bin\Debug\Atlas.Injector.pdb
+C:\Users\Core\Documents\Atlas\Atlas.Injector\bin\Debug\dnlib.dll
+C:\Users\Core\Documents\Atlas\Atlas.Injector\bin\Debug\dnlib.xml
+C:\Users\Core\Documents\Atlas\Atlas.Injector\obj\Debug\Atlas.Injector.csproj.CoreCompileInputs.cache
+C:\Users\Core\Documents\Atlas\Atlas.Injector\obj\Debug\Atlas.Injector.csproj.CopyComplete
+C:\Users\Core\Documents\Atlas\Atlas.Injector\obj\Debug\Atlas.Injector.exe
+C:\Users\Core\Documents\Atlas\Atlas.Injector\obj\Debug\Atlas.Injector.pdb

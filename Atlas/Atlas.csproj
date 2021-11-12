@@ -1,0 +1,375 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{0C091DC5-0F00-4F43-B0B8-960D1AEDFDE2}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Atlas</RootNamespace>
+    <AssemblyName>Atlas</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>bin\Release\Atlas.xml</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="0Harmony, Version=2.1.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Lib.Harmony.2.1.1\lib\net472\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>..\..\References\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp_publicized">
+      <HintPath>..\..\References\Assembly-CSharp_publicized.dll</HintPath>
+    </Reference>
+    <Reference Include="CommandSystem.Core, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\References\CommandSystem.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="DissonanceVoip_publicized">
+      <HintPath>..\..\References\DissonanceVoip_publicized.dll</HintPath>
+    </Reference>
+    <Reference Include="Mirror_publicized">
+      <HintPath>..\..\References\Mirror_publicized.dll</HintPath>
+    </Reference>
+    <Reference Include="NorthwoodLib">
+      <HintPath>..\..\References\NorthwoodLib.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Runtime" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="UnityEngine.AnimationModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\References\UnityEngine.AnimationModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\..\References\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>..\..\References\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="YamlDotNet, Version=11.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
+      <HintPath>..\packages\YamlDotNet.11.2.1\lib\net45\YamlDotNet.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Commands\Attributes\CommandAttribute.cs" />
+    <Compile Include="Commands\Attributes\CommandDescriptionAttribute.cs" />
+    <Compile Include="Commands\Attributes\CommandEnvironmentAttribute.cs" />
+    <Compile Include="Commands\Attributes\CommandUsageAttribute.cs" />
+    <Compile Include="Commands\Command.cs" />
+    <Compile Include="Commands\CommandArgs.cs" />
+    <Compile Include="Commands\CommandContext.cs" />
+    <Compile Include="Commands\CommandManager.cs" />
+    <Compile Include="Commands\Converters\IntegerConverter.cs" />
+    <Compile Include="Commands\Converters\PlayerConverter.cs" />
+    <Compile Include="Enums\CommandSource.cs" />
+    <Compile Include="Enums\RoomShape.cs" />
+    <Compile Include="Events\SendingCommand.cs" />
+    <Compile Include="Interfaces\IConverter.cs" />
+    <Compile Include="DefaultValues\DefaultHealth.cs" />
+    <Compile Include="DefaultValues\DefaultItems.cs" />
+    <Compile Include="Entities\Dummy.cs" />
+    <Compile Include="Entities\DummyInfo.cs" />
+    <Compile Include="Entities\Elevator.cs" />
+    <Compile Include="Entities\ElevatorChamber.cs" />
+    <Compile Include="Entities\Intercom.cs" />
+    <Compile Include="Entities\Items\AutomaticFirearmItem.cs" />
+    <Compile Include="Entities\Items\Base\BaseConsumableItem.cs" />
+    <Compile Include="Entities\Pickups\Base\BaseGrenade.cs" />
+    <Compile Include="Entities\Pickups\Base\BaseProjectile.cs" />
+    <Compile Include="Entities\Items\Base\BaseItem.cs" />
+    <Compile Include="Abstractions\MapObject.cs" />
+    <Compile Include="Abstractions\NetworkObject.cs" />
+    <Compile Include="Attributes\EventHandlerAttribute.cs" />
+    <Compile Include="Entities\Items\Base\BaseUsableItem.cs" />
+    <Compile Include="Entities\Items\Grenades\ExplosiveGrenade.cs" />
+    <Compile Include="Entities\Items\Grenades\FlashbangGrenade.cs" />
+    <Compile Include="Entities\Items\Grenades\Scp018Grenade.cs" />
+    <Compile Include="Entities\Items\AmmoItem.cs" />
+    <Compile Include="Entities\Items\BodyArmor.cs" />
+    <Compile Include="Entities\Camera.cs" />
+    <Compile Include="Entities\Cassie.cs" />
+    <Compile Include="Entities\Chamber.cs" />
+    <Compile Include="Entities\ClassList.cs" />
+    <Compile Include="Entities\Items\Coin.cs" />
+    <Compile Include="Entities\Door.cs" />
+    <Compile Include="Entities\Items\FirearmItem.cs" />
+    <Compile Include="Entities\Generator.cs" />
+    <Compile Include="Entities\Items\Flashlight.cs" />
+    <Compile Include="Entities\Items\KeycardItem.cs" />
+    <Compile Include="Entities\Items\MicroHidItem.cs" />
+    <Compile Include="Entities\Items\RadioItem.cs" />
+    <Compile Include="Entities\Items\ThrowableItem.cs" />
+    <Compile Include="Entities\Items\Usable\Adrenaline.cs" />
+    <Compile Include="Entities\Items\Usable\Medkit.cs" />
+    <Compile Include="Entities\Items\Usable\Painkillers.cs" />
+    <Compile Include="Entities\Items\Usable\Scp207.cs" />
+    <Compile Include="Entities\Items\Usable\Scp268.cs" />
+    <Compile Include="Entities\Items\Usable\Scp500.cs" />
+    <Compile Include="Entities\Locker.cs" />
+    <Compile Include="Entities\Map.cs" />
+    <Compile Include="Entities\Message.cs" />
+    <Compile Include="Entities\Pickups\Base\BasePickup.cs" />
+    <Compile Include="Entities\Pickups\AmmoPickup.cs" />
+    <Compile Include="Entities\Pickups\FirearmPickup.cs" />
+    <Compile Include="Entities\Pickups\KeycardPickup.cs" />
+    <Compile Include="Entities\Pickups\MicroHidPickup.cs" />
+    <Compile Include="Entities\Pickups\RadioPickup.cs" />
+    <Compile Include="Entities\Player.cs" />
+    <Compile Include="Entities\PlayersList.cs" />
+    <Compile Include="Entities\PocketDimension.cs" />
+    <Compile Include="Entities\PocketDimensionExit.cs" />
+    <Compile Include="Entities\Ragdoll.cs" />
+    <Compile Include="Entities\RagdollInfo.cs" />
+    <Compile Include="Entities\Rank.cs" />
+    <Compile Include="Entities\Respawn.cs" />
+    <Compile Include="Entities\Room.cs" />
+    <Compile Include="Entities\Round.cs" />
+    <Compile Include="Entities\Scp914.cs" />
+    <Compile Include="Entities\Server.cs" />
+    <Compile Include="Entities\Prefab.cs" />
+    <Compile Include="Entities\Target.cs" />
+    <Compile Include="Entities\Tesla.cs" />
+    <Compile Include="Entities\Warhead.cs" />
+    <Compile Include="Entities\Window.cs" />
+    <Compile Include="Entities\WindowStatus.cs" />
+    <Compile Include="Entities\Workstation.cs" />
+    <Compile Include="Enums\AmmoType.cs" />
+    <Compile Include="Enums\Animation.cs" />
+    <Compile Include="Enums\BetaBranch.cs" />
+    <Compile Include="Enums\BloodType.cs" />
+    <Compile Include="Enums\BuildType.cs" />
+    <Compile Include="Enums\CameraType.cs" />
+    <Compile Include="Enums\CoinResult.cs" />
+    <Compile Include="Enums\DoorPosition.cs" />
+    <Compile Include="Enums\DoorType.cs" />
+    <Compile Include="Enums\EffectType.cs" />
+    <Compile Include="Enums\ElevatorChamberType.cs" />
+    <Compile Include="Enums\ElevatorStatus.cs" />
+    <Compile Include="Enums\ElevatorType.cs" />
+    <Compile Include="Enums\ExitType.cs" />
+    <Compile Include="Enums\GeneratorAction.cs" />
+    <Compile Include="Enums\GeneratorFlags.cs" />
+    <Compile Include="Enums\GrenadeType.cs" />
+    <Compile Include="Enums\HidState.cs" />
+    <Compile Include="Enums\IntercomState.cs" />
+    <Compile Include="Enums\KnobSetting.cs" />
+    <Compile Include="Enums\LeadingTeam.cs" />
+    <Compile Include="Enums\MessageType.cs" />
+    <Compile Include="Enums\MuteType.cs" />
+    <Compile Include="Enums\NextAction.cs" />
+    <Compile Include="Enums\OtherType.cs" />
+    <Compile Include="Enums\PickupFlags.cs" />
+    <Compile Include="Enums\PrefabType.cs" />
+    <Compile Include="Enums\RadioLevel.cs" />
+    <Compile Include="Enums\ReportType.cs" />
+    <Compile Include="Enums\RespawnEffect.cs" />
+    <Compile Include="Enums\RoomType.cs" />
+    <Compile Include="Enums\Scp914Mode.cs" />
+    <Compile Include="Enums\Scp914SoundType.cs" />
+    <Compile Include="Enums\SightType.cs" />
+    <Compile Include="Enums\TargetButtonType.cs" />
+    <Compile Include="Enums\TargetType.cs" />
+    <Compile Include="Enums\ThrowRequest.cs" />
+    <Compile Include="Enums\ZoneType.cs" />
+    <Compile Include="EventSystem\Attributes\NoParamAttribute.cs" />
+    <Compile Include="EventSystem\Enums\DelegateType.cs" />
+    <Compile Include="EventSystem\EventManager.cs" />
+    <Compile Include="Events\AddingTargetScp096.cs" />
+    <Compile Include="Events\Announcing.cs" />
+    <Compile Include="Events\AnnouncingDecontamination.cs" />
+    <Compile Include="Events\AnnouncingNtfEntrance.cs" />
+    <Compile Include="Events\AnnouncingScpTermination.cs" />
+    <Compile Include="Events\ChangedRole.cs" />
+    <Compile Include="Events\ChangingCamera.cs" />
+    <Compile Include="Events\ChangingGroup.cs" />
+    <Compile Include="Events\ChangingIntoGrenade.cs" />
+    <Compile Include="Events\ChangingKnob.cs" />
+    <Compile Include="Events\ChangingLeverStatus.cs" />
+    <Compile Include="Events\ChangingMuteStatus.cs" />
+    <Compile Include="Events\ChangingRole.cs" />
+    <Compile Include="Events\Containing106.cs" />
+    <Compile Include="Events\CreatingPortal106.cs" />
+    <Compile Include="Events\DamagingWindow.cs" />
+    <Compile Include="Events\DecontaminationStarting.cs" />
+    <Compile Include="Events\ActivatingWorkstation.cs" />
+    <Compile Include="Events\DeactivatingWorkstation.cs" />
+    <Compile Include="Events\DroppedItem.cs" />
+    <Compile Include="Events\DroppingItem.cs" />
+    <Compile Include="Events\EnragingScp096.cs" />
+    <Compile Include="Events\EnteringFemurBreaker.cs" />
+    <Compile Include="Events\EnteringPocketDimension.cs" />
+    <Compile Include="Events\Escaping.cs" />
+    <Compile Include="Events\EscapingPocketDimension.cs" />
+    <Compile Include="Events\FailingPocketEscape.cs" />
+    <Compile Include="Events\FinishingRecall.cs" />
+    <Compile Include="Events\GainingExperience.cs" />
+    <Compile Include="Events\GainingLevel.cs" />
+    <Compile Include="Events\GeneratorActivated.cs" />
+    <Compile Include="Events\Handcuffing.cs" />
+    <Compile Include="Events\Interacting.cs" />
+    <Compile Include="Events\InteractingDoor.cs" />
+    <Compile Include="Events\InteractingGenerator.cs" />
+    <Compile Include="Events\InteractingLocker.cs" />
+    <Compile Include="Events\IntercomSpeaking.cs" />
+    <Compile Include="Events\Kicking.cs" />
+    <Compile Include="Events\LczDecontaminating.cs" />
+    <Compile Include="Events\MapGenerated.cs" />
+    <Compile Include="Events\PickingUpItem.cs" />
+    <Compile Include="Events\PlacingBlood.cs" />
+    <Compile Include="Events\PlacingBulletHole.cs" />
+    <Compile Include="Events\PlayerDied.cs" />
+    <Compile Include="Events\PlayerDying.cs" />
+    <Compile Include="Events\PlayerHurting.cs" />
+    <Compile Include="Events\PlayerJoining.cs" />
+    <Compile Include="Events\PlayerLeaving.cs" />
+    <Compile Include="Events\PreAuthentificating.cs" />
+    <Compile Include="Events\PryingGate.cs" />
+    <Compile Include="Events\ReceivingEffect.cs" />
+    <Compile Include="Events\Recontained.cs" />
+    <Compile Include="Events\ReloadingWeapon.cs" />
+    <Compile Include="Events\RemovingHandcuffs.cs" />
+    <Compile Include="Events\Reporting.cs" />
+    <Compile Include="Events\RespawningTeam.cs" />
+    <Compile Include="Events\RoundEnding.cs" />
+    <Compile Include="Events\RoundRestarting.cs" />
+    <Compile Include="Events\RoundStarting.cs" />
+    <Compile Include="Events\RoundWaiting.cs" />
+    <Compile Include="Events\ActivatingScp914.cs" />
+    <Compile Include="Events\Scp079InteractingDoor.cs" />
+    <Compile Include="Events\Scp096Charging.cs" />
+    <Compile Include="Events\Scp096ChargingPlayer.cs" />
+    <Compile Include="Events\Scp079TriggeringTesla.cs" />
+    <Compile Include="Events\Scp106Teleporting.cs" />
+    <Compile Include="Events\SendingCassieMessage.cs" />
+    <Compile Include="Events\ServerQuitting.cs" />
+    <Compile Include="Events\ServerStarted.cs" />
+    <Compile Include="Events\ServerStopping.cs" />
+    <Compile Include="Events\Shooting.cs" />
+    <Compile Include="Events\Shot.cs" />
+    <Compile Include="Events\Spawned.cs" />
+    <Compile Include="Events\SpawnedTarget.cs" />
+    <Compile Include="Events\Spawning.cs" />
+    <Compile Include="Events\SpawningItem.cs" />
+    <Compile Include="Events\SpawningRagdoll.cs" />
+    <Compile Include="Events\SpawningTantrum.cs" />
+    <Compile Include="Events\StartingSpeaker.cs" />
+    <Compile Include="Events\StartPryingGate.cs" />
+    <Compile Include="Events\StoppingSpeaker.cs" />
+    <Compile Include="Events\SyncingData.cs" />
+    <Compile Include="Events\ThrowingItem.cs" />
+    <Compile Include="Events\TriggeringTesla.cs" />
+    <Compile Include="Events\TryingNotToCry.cs" />
+    <Compile Include="Events\UpgradingItem.cs" />
+    <Compile Include="Events\UpgradingItemId.cs" />
+    <Compile Include="Events\UpgradingPlayer.cs" />
+    <Compile Include="Events\Blinking.cs" />
+    <Compile Include="Events\CalmingDown.cs" />
+    <Compile Include="Events\Banned.cs" />
+    <Compile Include="Events\Banning.cs" />
+    <Compile Include="Events\UsedItem.cs" />
+    <Compile Include="Events\UsingItem.cs" />
+    <Compile Include="Events\UsingMicroHidEnergy.cs" />
+    <Compile Include="Events\UsingRadioEnergy.cs" />
+    <Compile Include="Events\Verified.cs" />
+    <Compile Include="Events\WarheadDetonated.cs" />
+    <Compile Include="Events\WarheadInSiteInteracting.cs" />
+    <Compile Include="Events\WarheadOutsiteInteracting.cs" />
+    <Compile Include="Events\WarheadStarting.cs" />
+    <Compile Include="Events\WarheadStopping.cs" />
+    <Compile Include="Exceptions\HubNotFoundException.cs" />
+    <Compile Include="Extensions\EffectType.cs" />
+    <Compile Include="Extensions\HitExtensions.cs" />
+    <Compile Include="Extensions\Item.cs" />
+    <Compile Include="Extensions\Map.cs" />
+    <Compile Include="Extensions\Mirror.cs" />
+    <Compile Include="Extensions\NewInventoryExtensions.cs" />
+    <Compile Include="Extensions\Reflection.cs" />
+    <Compile Include="Extensions\Role.cs" />
+    <Compile Include="Extensions\Target.cs" />
+    <Compile Include="Extensions\UnityExtensions.cs" />
+    <Compile Include="Extensions\UserGroup.cs" />
+    <Compile Include="Log.cs" />
+    <Compile Include="ModBase.cs" />
+    <Compile Include="Extensions\String.cs" />
+    <Compile Include="Interfaces\IConfig.cs" />
+    <Compile Include="Interfaces\IModBase.cs" />
+    <Compile Include="ModManager\ConfigHolder.cs" />
+    <Compile Include="ModManager\ConfigManager.cs" />
+    <Compile Include="ModManager\Configs\CommentGatheringTypeInspector.cs" />
+    <Compile Include="ModManager\Configs\CommentsObjectDescriptor.cs" />
+    <Compile Include="ModManager\Configs\CommentsObjectGraphVisitor.cs" />
+    <Compile Include="ModManager\Configs\CommentsPropertyDescriptor.cs" />
+    <Compile Include="ModManager\Configs\Converters\Vector.cs" />
+    <Compile Include="ModManager\Configs\Extensions\ObjectCopy.cs" />
+    <Compile Include="ModManager\Configs\Atlas\MapConfiguration.cs" />
+    <Compile Include="ModManager\Configs\Atlas\AtlasConfiguration.cs" />
+    <Compile Include="ModManager\Configs\Atlas\RoleConfiguration.cs" />
+    <Compile Include="ModManager\Configs\Atlas\Scp049Configuration.cs" />
+    <Compile Include="ModManager\Configs\Atlas\Scp079Configuration.cs" />
+    <Compile Include="ModManager\Configs\Atlas\Scp096Configuration.cs" />
+    <Compile Include="ModManager\Configs\Atlas\Scp106Configuration.cs" />
+    <Compile Include="ModManager\Configs\Atlas\Scp173Configuration.cs" />
+    <Compile Include="ModManager\Configs\Atlas\Scp914Configuration.cs" />
+    <Compile Include="ModManager\Configs\Atlas\Scp939Configuration.cs" />
+    <Compile Include="ModManager\Configs\Atlas\ServerConfiguration.cs" />
+    <Compile Include="ModManager\Configs\ValidatingNodeSerializer.cs" />
+    <Compile Include="ModManager\Functions.cs" />
+    <Compile Include="ModManager\ModId.cs" />
+    <Compile Include="ModManager\ModLoader.cs" />
+    <Compile Include="Pools\EmptyList.cs" />
+    <Compile Include="Pools\ObjectPool.cs" />
+    <Compile Include="Pools\PoolableObject.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="BuildInfo.cs" />
+    <Compile Include="Toolkit\AmmoManager.cs" />
+    <Compile Include="Toolkit\Container.cs" />
+    <Compile Include="Toolkit\EnumHelper.cs" />
+    <Compile Include="Toolkit\RandomIdGenerator.cs" />
+    <Compile Include="Toolkit\SpawnpointHelper.cs" />
+    <Compile Include="Translations\Translation.cs" />
+    <Compile Include="Translations\TranslationsManager.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Events\ExplodingGrenade.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Enums\BarrelType.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

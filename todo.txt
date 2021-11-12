@@ -1,0 +1,14 @@
+To do:
+    - Rewrite the ragdoll class
+    - Rewrite the event manager and command manager to use event delegates cuz reflection is slow af
+    - Add configuration files
+    - Add Custom Items
+    - Add Custom Roles
+    - Add Custom Abilities
+    - Add Custom Objects
+    - Add Custom Coroutines
+    - Add Custom Components
+    - Add Custom Sounds
+    - Add patches for all remaining events and features
+
+boy, this is gonna take some time
