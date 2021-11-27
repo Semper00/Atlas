@@ -225,6 +225,18 @@ namespace Atlas.Entities
         /// Gets a player by his name or UserID.
         /// </summary>
         /// <param name="query">The query to search by.</param>
+        /// <returns>Whether or not the player was found.</returns>
+        public static bool TryGet(string query, out Player player)
+        {
+            player = Get(query);
+
+            return player != null;
+        }
+
+        /// <summary>
+        /// Gets a player by his name or UserID.
+        /// </summary>
+        /// <param name="query">The query to search by.</param>
         /// <returns>The player found, null if not.</returns>
         public static Player Get(string query)
         {

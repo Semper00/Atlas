@@ -2,28 +2,27 @@
 
 namespace Atlas.Commands.Attributes
 {
-    /// <summary>
-    /// Marks a method or a class as a commmand handler. When marking a class as a command handler, method names will be used as command names.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
     public class CommandAttribute : Attribute
     {
-        internal Type owner;
-        internal bool nameSupplied;
+        public string Text { get; }
+
+        public bool? IgnoreExtraArgs { get; }
 
         public CommandAttribute()
         {
-            nameSupplied = false;
+            Text = null;
         }
 
-        public CommandAttribute(string command, params string[] aliases)
+        public CommandAttribute(string text)
         {
-            nameSupplied = true;
-            Command = command;
-            Aliases = aliases;
+            Text = text;
         }
 
-        public string Command { get; internal set; }
-        public string[] Aliases { get; internal set; } 
+        public CommandAttribute(string text, bool ignoreExtraArgs)
+        {
+            Text = text;
+            IgnoreExtraArgs = ignoreExtraArgs;
+        }
     }
 }

@@ -1,0 +1,33 @@
+﻿using System.Collections.Generic;
+
+namespace Atlas.Commands.Entities
+{
+    internal class CommandMap
+    {
+        private readonly CommandManager _service;
+        private readonly CommandMapNode _root;
+        private static readonly string[] BlankAliases = { "" };
+
+        public CommandMap(CommandManager service)
+        {
+            _service = service;
+            _root = new CommandMapNode("");
+        }
+
+        public void AddCommand(CommandInfo command)
+        {
+            foreach (string text in command.Aliases)
+                _root.AddCommand(_service, text, 0, command);
+        }
+        public void RemoveCommand(CommandInfo command)
+        {
+            foreach (string text in command.Aliases)
+                _root.RemoveCommand(_service, text, 0, command);
+        }
+
+        public IEnumerable<CommandMatch> GetCommands(string text)
+        {
+            return _root.GetCommands(_service, text, 0, text != "");
+        }
+    }
+}

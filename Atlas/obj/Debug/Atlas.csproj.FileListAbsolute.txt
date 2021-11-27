@@ -79,3 +79,11 @@ C:\Users\Core\Documents\Atlas\Atlas\bin\Debug\YamlDotNet.xml
 C:\Users\Core\Documents\Atlas\Atlas\obj\Debug\Atlas.csproj.CopyComplete
 C:\Users\Core\Documents\Atlas\Atlas\obj\Debug\Atlas.dll
 C:\Users\Core\Documents\Atlas\Atlas\obj\Debug\Atlas.pdb
+C:\Users\Core\Documents\Atlas\Atlas\bin\Debug\Atlas.dll.config
+C:\Users\Core\Documents\Atlas\Atlas\bin\Debug\System.Collections.Immutable.dll
+C:\Users\Core\Documents\Atlas\Atlas\bin\Debug\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\Core\Documents\Atlas\Atlas\bin\Debug\System.Buffers.xml
+C:\Users\Core\Documents\Atlas\Atlas\bin\Debug\System.Collections.Immutable.xml
+C:\Users\Core\Documents\Atlas\Atlas\bin\Debug\System.Memory.xml
+C:\Users\Core\Documents\Atlas\Atlas\bin\Debug\System.Numerics.Vectors.xml
+C:\Users\Core\Documents\Atlas\Atlas\bin\Debug\System.Runtime.CompilerServices.Unsafe.xml

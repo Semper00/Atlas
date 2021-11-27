@@ -1,278 +1,449 @@
 ﻿using System;
-using System.Reflection;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
 
-using Atlas.Interfaces;
 using Atlas.Entities;
-using Atlas.Pools;
-using Atlas.Enums;
-using Atlas.Commands.Attributes;
+using Atlas.Commands.Builders;
 using Atlas.Commands.Converters;
+using Atlas.Commands.Converters.Results;
+using Atlas.Commands.Entities;
+using Atlas.Commands.Enums;
+using Atlas.Commands.Interfaces;
 
 namespace Atlas.Commands
 {
-    /// <summary>
-    /// A static class used to manage commands.
-    /// </summary>
-    public class CommandManager
+    public class CommandManager : IDisposable
     {
-        private static Dictionary<Type, IConverter> _convs;
-        private static Dictionary<Type, HashSet<Command>> _cmds;
+        public static readonly List<CommandManager> All = new List<CommandManager>();
 
-        static CommandManager()
+        public event Action<CommandContext, CommandInfo, IResult> OnCommandExecuted;
+        public event Action<CommandContext, CommandInfo, Exception> OnCommandErrored;
+
+        private readonly SemaphoreSlim _moduleLock;
+        private readonly ConcurrentDictionary<Type, CommandModuleInfo> _typedModuleDefs;
+        private readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, Converter>> _converters;
+        private readonly ConcurrentDictionary<Type, Converter> _defaultConverters;
+        private readonly ImmutableList<(Type, Type)> _entityConverters;
+        private readonly HashSet<CommandModuleInfo> _moduleDefs;
+        private readonly CommandMap _map;
+
+        internal bool _isDisposed;
+
+        public IEnumerable<CommandModuleInfo> Modules => _moduleDefs.Select(x => x);
+
+        public IEnumerable<CommandInfo> Commands => _moduleDefs.SelectMany(x => x.Commands);
+
+        public ILookup<Type, Converter> Converters => _converters.SelectMany(x => x.Value.Select(y => new { y.Key, y.Value })).ToLookup(x => x.Key, x => x.Value);
+
+        public CommandManagerConfig Config { get; }
+
+        public CommandManager() : this(new CommandManagerConfig()) { }
+
+        public CommandManager(CommandManagerConfig config)
         {
-            _cmds = new Dictionary<Type, HashSet<Command>>();
+            All.Add(this);
 
-            _convs = new Dictionary<Type, IConverter>()
+            Config = config;
+
+            _moduleLock = new SemaphoreSlim(1, 1);
+            _typedModuleDefs = new ConcurrentDictionary<Type, CommandModuleInfo>();
+            _moduleDefs = new HashSet<CommandModuleInfo>();
+            _map = new CommandMap(this);
+            _converters = new ConcurrentDictionary<Type, ConcurrentDictionary<Type, Converter>>();
+            _defaultConverters = new ConcurrentDictionary<Type, Converter>();
+
+            foreach (var type in PrimitiveConverters.SupportedTypes)
             {
-                [typeof(int)] = new IntegerConverter(),
-                [typeof(Player)] = new PlayerConverter()
-            };
-        }
-
-        /// <summary>
-        /// Executes a command from the given command line.
-        /// </summary>
-        /// <param name="source">The source of the command.</param>
-        /// <param name="sender">The player who sent the command.</param>
-        /// <param name="line">The command line.</param>
-        /// <returns>true if the command was executed succesfully, otherwise false.</returns>
-        public static bool ExecuteCommand(CommandSource source, Player sender, string line)
-        {
-            string[] args = line.Split(' ');
-
-            if (args.Length < 1)
-                return false;
-
-            CommandContext ctx = null;
-            Command cmd = null;
-
-            string cmdName = args[0];
-
-            foreach (HashSet<Command> set in _cmds.Values)
-            {
-                foreach (Command command in set)
-                {
-                    if (!command.Environment.Contains(source))
-                        continue;
-
-                    if (command.Name == cmdName)
-                    {
-                        ctx = ObjectPool<CommandContext>.Shared.Rent();
-                        cmd = command;
-
-                        ctx.args = ObjectPool<CommandArgs>.Shared.Rent();
-                        ctx.cmd = cmd;
-                        ctx.sender = sender;
-                        ctx.source = source;
-
-                        break;
-                    }
-
-                    if (command.Aliases.Contains(cmdName))
-                    {
-                        ctx = ObjectPool<CommandContext>.Shared.Rent();
-                        cmd = command;
-
-                        ctx.args = ObjectPool<CommandArgs>.Shared.Rent();
-                        ctx.cmd = cmd;
-                        ctx.sender = sender;
-                        ctx.source = source;
-
-                        break;
-                    }
-                }
+                _defaultConverters[type] = PrimitiveTypeConverter.Create(type);
+                _defaultConverters[typeof(Nullable<>).MakeGenericType(type)] = NullableConverter.Create(type, _defaultConverters[type]);
             }
 
-            if (ctx == null || cmd == null)
-                return false;
+            var tsreader = new TimeSpanConverter();
+
+            _defaultConverters[typeof(TimeSpan)] = tsreader;
+            _defaultConverters[typeof(TimeSpan?)] = NullableConverter.Create(typeof(TimeSpan), tsreader);
+
+            _defaultConverters[typeof(string)] =
+                new PrimitiveTypeConverter<string>((string x, out string y) => { y = x; return true; }, 0);
+
+            var entityConverters = ImmutableList.CreateBuilder<(Type, Type)>();
+
+            entityConverters.Add((typeof(Camera), typeof(CameraConverter)));
+            entityConverters.Add((typeof(Door), typeof(DoorConverter)));
+            entityConverters.Add((typeof(Elevator), typeof(ElevatorConvertor)));
+            entityConverters.Add((typeof(Player), typeof(PlayerConverter)));
+            entityConverters.Add((typeof(Prefab), typeof(PrefabConverter)));
+            entityConverters.Add((typeof(Room), typeof(RoomConvertor)));
+
+            _entityConverters = entityConverters.ToImmutable();
+        }
+
+        ~CommandManager()
+        {
+            All.Remove(this);
+        }
+
+        public CommandModuleInfo CreateModule(string primaryAlias, Action<CommandModuleInfoBuilder> buildFunc)
+        {
+            _moduleLock.Wait();
 
             try
             {
-                cmd.ExecuteCommand(ctx);
+                var builder = new CommandModuleInfoBuilder(this, null, primaryAlias);
 
-                ObjectPool<CommandArgs>.Shared.Return(ctx.args);
-                ObjectPool<CommandContext>.Shared.Return(ctx);
+                buildFunc(builder);
 
-                return true;
+                var module = builder.Build(this, null);
+
+                return LoadModuleInternal(module);
             }
-            catch (Exception e)
+            finally
             {
-                Log.Add("Atlas", $"An error occured while trying to execute the {cmd.Name} command! ({cmd.Method.DeclaringType.FullName}.{cmd.Method.Name})");
-                Log.Add("Atlas", e);
-
-                return false;
+                _moduleLock.Release();
             }
         }
 
-        /// <summary>
-        /// Registers all commands from this class.
-        /// </summary>
-        /// <typeparam name="T">The class.</typeparam>
-        public static void RegisterCommands<T>(T instance) 
-            => RegisterCommands(typeof(T), instance);
+        public CommandModuleInfo AddModule<T>() => AddModule(typeof(T));
 
-        /// <summary>
-        /// Registers all commands from this class.
-        /// </summary>
-        /// <param name="type">The class.</param>
-        public static void RegisterCommands(Type type, object instance)
+        public CommandModuleInfo AddModule(Type type)
         {
-            CommandAttribute typeAttr = type.GetCustomAttribute<CommandAttribute>();
+            _moduleLock.Wait();
 
-            if (typeAttr != null)
+            try
             {
-                if (!_cmds.ContainsKey(type))
-                    _cmds.Add(type, new HashSet<Command>());
+                var typeInfo = type.GetTypeInfo();
 
-                typeAttr.owner = type;
+                if (_typedModuleDefs.ContainsKey(type))
+                    throw new ArgumentException("This module has already been added.");
 
-                foreach (MethodInfo info in type.GetMethods())
+                var module = CommandModuleClassBuilder.Build(this, typeInfo).FirstOrDefault();
+
+                if (module.Value == default(CommandModuleInfo))
+                    throw new InvalidOperationException($"Could not build the module {type.FullName}, did you pass an invalid type?");
+
+                _typedModuleDefs[module.Key] = module.Value;
+
+                return LoadModuleInternal(module.Value);
+            }
+            finally
+            {
+                _moduleLock.Release();
+            }
+        }
+
+        public IEnumerable<CommandModuleInfo> AddModules(Assembly assembly)
+        {
+            _moduleLock.Wait();
+
+            try
+            {
+                var types = CommandModuleClassBuilder.Search(assembly, this);
+                var moduleDefs = CommandModuleClassBuilder.Build(types, this);
+
+                foreach (var info in moduleDefs)
                 {
-                    if (!info.IsPublic)
-                        continue;
+                    _typedModuleDefs[info.Key] = info.Value;
+                    LoadModuleInternal(info.Value);
+                }
 
-                    ParameterInfo[] param = info.GetParameters();
+                return moduleDefs.Select(x => x.Value).ToImmutableArray();
+            }
+            finally
+            {
+                _moduleLock.Release();
+            }
+        }
 
-                    if (param == null || param.Length < 1)
-                        continue;
+        private CommandModuleInfo LoadModuleInternal(CommandModuleInfo module)
+        {
+            _moduleDefs.Add(module);
 
-                    if (param[0].ParameterType != typeof(CommandContext))
-                        continue;
+            foreach (var command in module.Commands)
+                _map.AddCommand(command);
 
-                    Command command = new Command(typeAttr, info, param, instance);
+            foreach (var submodule in module.Submodules)
+                LoadModuleInternal(submodule);
 
-                    _cmds[type].Add(command);
+            return module;
+        }
+
+        public bool RemoveModule(CommandModuleInfo module)
+        {
+            _moduleLock.Wait();
+
+            try
+            {
+                return RemoveModuleInternal(module);
+            }
+            finally
+            {
+                _moduleLock.Release();
+            }
+        }
+
+        public bool RemoveModule<T>() => RemoveModule(typeof(T));
+
+        public bool RemoveModule(Type type)
+        {
+            _moduleLock.Wait();
+
+            try
+            {
+                if (!_typedModuleDefs.TryRemove(type, out var module))
+                    return false;
+
+                return RemoveModuleInternal(module);
+            }
+            finally
+            {
+                _moduleLock.Release();
+            }
+        }
+
+        private bool RemoveModuleInternal(CommandModuleInfo module)
+        {
+            if (!_moduleDefs.Remove(module))
+                return false;
+
+            foreach (var cmd in module.Commands)
+                _map.RemoveCommand(cmd);
+
+            foreach (var submodule in module.Submodules)
+            {
+                RemoveModuleInternal(submodule);
+            }
+
+            return true;
+        }
+
+        public void AddConverter<T>(Converter reader)
+            => AddConverter(typeof(T), reader);
+
+        public void AddConverter(Type type, Converter reader)
+        {
+            AddConverter(type, reader, true);
+        }
+
+        public void AddConverter<T>(Converter reader, bool replaceDefault)
+            => AddConverter(typeof(T), reader, replaceDefault);
+
+        public void AddConverter(Type type, Converter reader, bool replaceDefault)
+        {
+            if (replaceDefault && HasDefaultConverter(type))
+            {
+                _defaultConverters.AddOrUpdate(type, reader, (k, v) => reader);
+
+                if (type.GetTypeInfo().IsValueType)
+                {
+                    var nullableType = typeof(Nullable<>).MakeGenericType(type);
+                    var nullableReader = NullableConverter.Create(type, reader);
+                    _defaultConverters.AddOrUpdate(nullableType, nullableReader, (k, v) => nullableReader);
                 }
             }
             else
             {
-                if (!_cmds.ContainsKey(type))
-                    _cmds.Add(type, new HashSet<Command>());
+                var readers = _converters.GetOrAdd(type, x => new ConcurrentDictionary<Type, Converter>());
 
-                foreach (MethodInfo info in type.GetMethods())
-                {
-                    if (!info.IsPublic)
-                        continue;
+                readers[reader.GetType()] = reader;
 
-                    CommandAttribute methodAttr = info.GetCustomAttribute<CommandAttribute>();
-
-                    if (methodAttr == null)
-                        continue;
-
-                    ParameterInfo[] param = info.GetParameters();
-
-                    if (param == null || param.Length < 1)
-                        continue;
-
-                    if (param[0].ParameterType != typeof(CommandContext))
-                        continue;
-
-                    methodAttr.owner = type;
-
-                    Command command = new Command(methodAttr, info, param, instance);
-
-                    _cmds[type].Add(command);
-                }
+                if (type.GetTypeInfo().IsValueType)
+                    AddNullableConverter(type, reader);
             }
         }
 
-        /// <summary>
-        /// Registers all commands in an assembly.
-        /// </summary>
-        /// <param name="assembly"></param>
-        public static void RegisterCommands(Assembly assembly)
+        internal bool HasDefaultConverter(Type type)
         {
-            foreach (Type type in assembly.GetTypes())
-                RegisterCommands(type, null);
+            if (_defaultConverters.ContainsKey(type))
+                return true;
+
+            var typeInfo = type.GetTypeInfo();
+            if (typeInfo.IsEnum)
+                return true;
+            return _entityConverters.Any(x => type == x.Item1 || typeInfo.ImplementedInterfaces.Contains(x.Item1));
         }
 
-        /// <summary>
-        /// Unregisters all commmands in this class.
-        /// </summary>
-        /// <typeparam name="T">The class.</typeparam>
-        public static void UnregisterCommands<T>() 
-            => UnregisterCommands(typeof(T));
-
-        /// <summary>
-        /// Unregisters all commands in this class.
-        /// </summary>
-        /// <param name="type">The class.</param>
-        public static void UnregisterCommands(Type type)
+        internal void AddNullableConverter(Type valueType, Converter valueConverter)
         {
-            if (_cmds.ContainsKey(type))
-            {
-                _cmds[type].Clear();
+            var readers = _converters.GetOrAdd(typeof(Nullable<>).MakeGenericType(valueType), x => new ConcurrentDictionary<Type, Converter>());
+            var nullableReader = NullableConverter.Create(valueType, valueConverter);
+            readers[nullableReader.GetType()] = nullableReader;
+        }
 
-                _cmds.Remove(type);
+        internal IDictionary<Type, Converter> GetConverters(Type type)
+        {
+            if (_converters.TryGetValue(type, out var definedConverters))
+                return definedConverters;
+
+            return null;
+        }
+
+        internal Converter GetDefaultConverter(Type type)
+        {
+            if (_defaultConverters.TryGetValue(type, out var reader))
+                return reader;
+            var typeInfo = type.GetTypeInfo();
+
+            if (typeInfo.IsEnum)
+            {
+                reader = EnumConverter.GetReader(type);
+                _defaultConverters[type] = reader;
+                return reader;
             }
-        }
 
-        /// <summary>
-        /// Unregisters all commands in an assembly.
-        /// </summary>
-        /// <param name="assembly"></param>
-        public static void UnregisterCommands(Assembly assembly)
-        {
-            foreach (Type type in assembly.GetTypes())
-                UnregisterCommands(type);
-        }
-
-        /// <summary>
-        /// Gets all commands in an assembly.
-        /// </summary>
-        /// <param name="assembly"></param>
-        /// <returns></returns>
-        public static HashSet<Command> GetCommands(Assembly assembly)
-        {
-            HashSet<Command> set = new HashSet<Command>();
-
-            foreach (KeyValuePair<Type, HashSet<Command>> pair in _cmds)
+            for (int i = 0; i < _entityConverters.Count; i++)
             {
-                if (assembly.GetTypes().Contains(pair.Key))
+                if (type == _entityConverters[i].Item1 || typeInfo.ImplementedInterfaces.Contains(_entityConverters[i].Item1))
                 {
-                    set.UnionWith(pair.Value);
+                    reader = Activator.CreateInstance(_entityConverters[i].Item2.MakeGenericType(type)) as Converter;
+                    _defaultConverters[type] = reader;
+                    return reader;
                 }
             }
 
-            return set;
+            return null;
         }
 
-        /// <summary>
-        /// Gets the <see cref="IConverter"/> for this class or null if none were found.
-        /// </summary>
-        /// <typeparam name="T">The class you want a converter instance of.</typeparam>
-        /// <returns>The converter instance.</returns>
-        public static IConverter GetConverter<T>() 
-            => _convs.TryGetValue(typeof(T), out IConverter conv) ? conv : null;
+        public SearchResult Search(CommandContext context, int argPos)
+            => Search(context.Text.Substring(argPos));
 
-        /// <summary>
-        /// Gets all registered converters.
-        /// </summary>
-        /// <returns></returns>
-        public static IReadOnlyDictionary<Type, IConverter> GetConverters() 
-            => _convs;
+        public SearchResult Search(CommandContext context, string input)
+            => Search(input);
 
-        /// <summary>
-        /// Register a new type converter.
-        /// </summary>
-        /// <typeparam name="T">The class this converter converts to.</typeparam>
-        /// <param name="converter">The converter instance.</param>
-        public static void RegisterConverter<T>(IConverter converter) where T : new()
+        public SearchResult Search(string input)
         {
-            Type type = typeof(T);
+            string searchInput = Config.CaseSensitiveCommands ? input : input.ToLowerInvariant();
+            var matches = _map.GetCommands(searchInput).OrderByDescending(x => x.Command.Priority).ToImmutableArray();
 
-            if (_convs.ContainsKey(type))
-                throw new Exception("A converter for that type already exists!");
-
-            _convs.Add(type, converter);
+            if (matches.Length > 0)
+                return SearchResult.FromSuccess(input, matches);
+            else
+                return SearchResult.FromError(CommandError.UnknownCommand, "Unknown command.");
         }
 
-        /// <summary>
-        /// Unregisters all converters for this class.
-        /// </summary>
-        /// <typeparam name="T">The class.</typeparam>
-        public static bool UnregisterConverter<T>() where T : IConverter
-            => _convs.Remove(typeof(T));
+        public IResult Execute(CommandContext context, int argPos)
+            => Execute(context, context.Text.Substring(argPos));
+
+        public IResult Execute(CommandContext context, string input)
+        {
+            try
+            {
+                var searchResult = Search(input);
+
+                if (!searchResult.IsSuccess)
+                {
+                    OnCommandExecuted.Invoke(context, null, searchResult);
+
+                    return searchResult;
+                }
+
+                var commands = searchResult.Commands;
+                var parseResultsDict = new Dictionary<CommandMatch, ParseResult>();
+
+                foreach (var cmd in commands)
+                {
+                    var parseResult = cmd.Parse(context, searchResult);
+
+                    if (parseResult.Error == CommandError.MultipleMatches)
+                    {
+                        IReadOnlyList<ConverterValue> argList, paramList;
+
+                        argList = parseResult.ArgValues.Select(x => x.Values.OrderByDescending(y => y.Score).First()).ToImmutableArray();
+                        paramList = parseResult.ParamValues.Select(x => x.Values.OrderByDescending(y => y.Score).First()).ToImmutableArray();
+                        parseResult = ParseResult.FromSuccess(argList, paramList);
+                    }
+
+                    parseResultsDict[cmd] = parseResult;
+                }
+
+                float CalculateScore(CommandMatch match, ParseResult parseResult)
+                {
+                    float argValuesScore = 0, paramValuesScore = 0;
+
+                    if (match.Command.Parameters.Count > 0)
+                    {
+                        var argValuesSum = parseResult.ArgValues?.Sum(x => x.Values.OrderByDescending(y => y.Score).FirstOrDefault().Score) ?? 0;
+                        var paramValuesSum = parseResult.ParamValues?.Sum(x => x.Values.OrderByDescending(y => y.Score).FirstOrDefault().Score) ?? 0;
+
+                        argValuesScore = argValuesSum / match.Command.Parameters.Count;
+                        paramValuesScore = paramValuesSum / match.Command.Parameters.Count;
+                    }
+
+                    var totalArgsScore = (argValuesScore + paramValuesScore) / 2;
+                    return match.Command.Priority + totalArgsScore * 0.99f;
+                }
+
+                var parseResults = parseResultsDict
+                    .OrderByDescending(x => CalculateScore(x.Key, x.Value));
+
+                var successfulParses = parseResults
+                    .Where(x => x.Value.IsSuccess)
+                    .ToArray();
+
+                if (successfulParses.Length == 0)
+                {
+                    var bestMatch = parseResults
+                        .FirstOrDefault(x => !x.Value.IsSuccess);
+
+                    OnCommandExecuted.Invoke(context, bestMatch.Key.Command, bestMatch.Value);
+
+                    return bestMatch.Value;
+                }
+
+                var chosenOverload = successfulParses[0];
+                var result = chosenOverload.Key.Execute(context, chosenOverload.Value);
+
+                if (!result.IsSuccess && !(result is ExecuteResult))
+                    OnCommandExecuted.Invoke(context, chosenOverload.Key.Command, result);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                OnCommandErrored.Invoke(context, null, e);
+
+                return ExecuteResult.FromError(e);
+            }
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_isDisposed)
+            {
+                if (disposing)
+                {
+                    _moduleLock?.Dispose();
+                }
+
+                _isDisposed = true;
+            }
+        }
+
+        void IDisposable.Dispose()
+        {
+            Dispose(true);
+        }
+
+        public static IResult Execute(CommandContext ctx)
+        {
+            foreach (CommandManager cmdManager in All)
+            {
+                SearchResult result = cmdManager.Search(ctx.Text);
+
+                if (result.IsSuccess)
+                {
+                    return cmdManager.Execute(ctx, ctx.Text);             
+                }
+                else
+                {
+                    continue;
+                }
+            }
+
+            return ExecuteResult.FromError(CommandError.UnknownCommand, "Command not found.");
+        }
     }
 }

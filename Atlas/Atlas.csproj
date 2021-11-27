@@ -59,9 +59,25 @@
       <HintPath>..\..\References\NorthwoodLib.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections.Immutable, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.6.0.0\lib\net461\System.Collections.Immutable.dll</HintPath>
+    </Reference>
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
     <Reference Include="System.Runtime" />
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -83,16 +99,55 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\Attributes\AliasAttribute.cs" />
     <Compile Include="Commands\Attributes\CommandAttribute.cs" />
-    <Compile Include="Commands\Attributes\CommandDescriptionAttribute.cs" />
-    <Compile Include="Commands\Attributes\CommandEnvironmentAttribute.cs" />
-    <Compile Include="Commands\Attributes\CommandUsageAttribute.cs" />
-    <Compile Include="Commands\Command.cs" />
-    <Compile Include="Commands\CommandArgs.cs" />
+    <Compile Include="Commands\Attributes\NameAttribute.cs" />
+    <Compile Include="Commands\Attributes\NamedArgumentTypeAttribute.cs" />
+    <Compile Include="Commands\Attributes\PriorityAttribute.cs" />
+    <Compile Include="Commands\Attributes\RemainderAttribute.cs" />
+    <Compile Include="Commands\Attributes\SummaryAttribute.cs" />
+    <Compile Include="Commands\Attributes\TypeAttribute.cs" />
+    <Compile Include="Commands\Builders\CommandInfoBuilder.cs" />
+    <Compile Include="Commands\Builders\CommandModuleClassBuilder.cs" />
+    <Compile Include="Commands\Builders\CommandModuleInfoBuilder.cs" />
+    <Compile Include="Commands\Builders\CommandParameterInfoBuilder.cs" />
     <Compile Include="Commands\CommandContext.cs" />
     <Compile Include="Commands\CommandManager.cs" />
-    <Compile Include="Commands\Converters\IntegerConverter.cs" />
+    <Compile Include="Commands\CommandManagerConfig.cs" />
+    <Compile Include="Commands\CommandModule.cs" />
+    <Compile Include="Commands\Converters\CameraConverter.cs" />
+    <Compile Include="Commands\Converters\Converter.cs" />
+    <Compile Include="Commands\Converters\DoorConverter.cs" />
+    <Compile Include="Commands\Converters\ElevatorConvertor.cs" />
+    <Compile Include="Commands\Converters\EnumConverter.cs" />
+    <Compile Include="Commands\Converters\NamedArgumentConverter.cs" />
+    <Compile Include="Commands\Converters\NullableConverter.cs" />
     <Compile Include="Commands\Converters\PlayerConverter.cs" />
+    <Compile Include="Commands\Converters\PrefabConverter.cs" />
+    <Compile Include="Commands\Converters\PrimitiveConverters.cs" />
+    <Compile Include="Commands\Converters\PrimitiveTypeConverter.cs" />
+    <Compile Include="Commands\Converters\Results\ConverterResult.cs" />
+    <Compile Include="Commands\Converters\Results\ParseResult.cs" />
+    <Compile Include="Commands\Converters\Results\ExecuteResult.cs" />
+    <Compile Include="Commands\Converters\Results\SearchResult.cs" />
+    <Compile Include="Commands\Converters\RoomConvertor.cs" />
+    <Compile Include="Commands\Converters\TimeSpanConverter.cs" />
+    <Compile Include="Commands\Entities\CommandInfo.cs" />
+    <Compile Include="Commands\Entities\CommandMap.cs" />
+    <Compile Include="Commands\Entities\CommandMapNode.cs" />
+    <Compile Include="Commands\Entities\CommandMatch.cs" />
+    <Compile Include="Commands\Entities\CommandModuleInfo.cs" />
+    <Compile Include="Commands\Entities\CommandParameterInfo.cs" />
+    <Compile Include="Commands\Entities\CommandParser.cs" />
+    <Compile Include="Commands\Entities\ConverterValue.cs" />
+    <Compile Include="Commands\Enums\CommandError.cs" />
+    <Compile Include="Commands\Enums\CommandType.cs" />
+    <Compile Include="Commands\Extensions\EnumerableExtensions.cs" />
+    <Compile Include="Commands\Interfaces\ICommandModule.cs" />
+    <Compile Include="Commands\Interfaces\ICommandSender.cs" />
+    <Compile Include="Commands\Interfaces\IResult.cs" />
+    <Compile Include="Commands\Utilities\QuotationAliasUtils.cs" />
+    <Compile Include="Commands\Utilities\ReflectionUtils.cs" />
     <Compile Include="Enums\CommandSource.cs" />
     <Compile Include="Enums\RoomShape.cs" />
     <Compile Include="Events\SendingCommand.cs" />
@@ -368,6 +423,7 @@
     <Compile Include="Enums\BarrelType.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />

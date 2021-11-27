@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Diagnostics;
 using System.Reflection;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.Collections.Generic;
 using Atlas.ModManager;
 using Atlas.Interfaces;
 using Atlas.Commands;
+using Atlas.Commands.Entities;
 using Atlas.Translations;
 using Atlas.EventSystem;
 
@@ -48,14 +50,18 @@ namespace Atlas
 
         ~ModBase()
         {
-            CommandManager.UnregisterCommands(Assembly);
-            EventManager.Unregister(Assembly);
+
         }
 
         /// <summary>
         /// Gets the mod's class.
         /// </summary>
         public Type PluginClass { get; }
+
+        /// <summary>
+        /// Gets or sets the plugin's command manager.
+        /// </summary>
+        public CommandManager Manager { get; private set; }
 
         /// <summary>
         /// Gets the mod's author.
@@ -100,8 +106,8 @@ namespace Atlas
         /// <summary>
         /// Gets all commands this mod has registered.
         /// </summary>
-        public HashSet<Command> Commands
-            => CommandManager.GetCommands(Assembly);
+        public IEnumerable<CommandInfo> Commands
+            => Manager.Commands;
 
         /// <summary>
         /// Gets a list of all <see cref="EventHandler"/>s registered in this mod.
@@ -148,7 +154,6 @@ namespace Atlas
         public virtual void Enable()
             => Info("Succesfully enabled.");
 
-
         /// <summary>
         /// Fires when the mod gets disabled.
         /// </summary>
@@ -170,19 +175,36 @@ namespace Atlas
             => EventManager.Register(instance);
 
         /// <summary>
-        /// Registers all commands inside a class.
+        /// Registers all commands inside a module.
         /// </summary>
-        /// <typeparam name="T">The class to register from.</typeparam>
-        /// <param name="instance">The instance of the class - <b>required unless the class is static.</b></param>
-        public void RegisterCommands<T>(T instance = default)
-            => CommandManager.RegisterCommands(instance);
+        /// <typeparam name="T">The module's type.</typeparam>
+        public void RegisterCommands<T>()
+            => RegisterCommands<T>(null);
+
+        /// <summary>
+        /// Registers all commands inside a module.
+        /// </summary>
+        /// <typeparam name="T">The module's type.</typeparam>
+        /// <param name="config">The config for your CommandManager instance.</param>
+        public void RegisterCommands<T>(CommandManagerConfig config = null)
+        {
+            if (Manager == null)
+                Manager = new CommandManager(config == null ? new CommandManagerConfig() : config);
+
+            Manager.AddModule<T>();
+        }
 
         /// <summary>
         /// Unregisters all commands inside a class.
         /// </summary>
         /// <typeparam name="T">The class to unregister commands in.</typeparam>
         public void UnregisterCommmands<T>()
-            => CommandManager.UnregisterCommands<T>();
+        {
+            if (Manager == null)
+                return;
+
+            Manager.RemoveModule<T>();
+        }
 
         /// <summary>
         /// Unregisters all events inside a class.
@@ -201,7 +223,12 @@ namespace Atlas
         /// Unregisters all commands.
         /// </summary>
         public void UnregisterCommands()
-            => CommandManager.UnregisterCommands(Assembly);
+        {
+            if (Manager == null)
+                return;
+
+            Manager.Commands.ToList().ForEach(x => Manager.RemoveModule(x.Module));
+        }
 
         /// <summary>
         /// Saves the mod's config file with all current values.

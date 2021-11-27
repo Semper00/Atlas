@@ -1,82 +1,55 @@
-﻿using Atlas.Entities;
-using Atlas.Pools;
-using Atlas.Enums;
+﻿using System;
+
+using Atlas.Commands.Interfaces;
+using Atlas.Commands.Enums;
+using Atlas.Commands.Entities;
+using Atlas.Entities;
 
 namespace Atlas.Commands
 {
-    /// <summary>
-    /// A class to provide context when executing commands.
-    /// </summary>
-    public class CommandContext : PoolableObject
+    public class CommandContext 
     {
-        internal Command cmd;
-        internal Player sender;
-        internal CommandSource source;
-        internal CommandArgs args;
+        public CommandManager Manager { get; }
+        public CommandModule Module { get; }
+        public CommandInfo Command { get; }
+        public ICommandSender Sender { get; }
+        public CommandType Source { get; }
 
-        public CommandContext() { }
+        public Player Player { get; }
 
-        /// <summary>
-        /// Gets the command that is being executed.
-        /// </summary>
-        public Command Command { get => cmd; }
+        public string Text { get; }
 
-        /// <summary>
-        /// Gets the command arguments.
-        /// </summary>
-        public CommandArgs Args { get => args; }
-
-        /// <summary>
-        /// Gets the command sender.
-        /// </summary>
-        public Player Sender { get => sender; }
-
-        /// <summary>
-        /// Gets a value indicating whether or not the sender is a player.
-        /// </summary>
-        public bool IsPlayer { get => !sender.IsHost; }
-
-        /// <summary>
-        /// Gets a value indicating whether or not the sender is the server.
-        /// </summary>
-        public bool IsServer { get => sender.IsHost; }
-
-        /// <summary>
-        /// Gets an enum indicating the source of this command.
-        /// </summary>
-        public CommandSource Source { get => source; }
-
-        /// <summary>
-        /// Sends a reply to the player or server console.
-        /// </summary>
-        /// <param name="reply">The response.</param>
-        /// <param name="color">The color to reply with (aplies only when sent from the player console).</param>
-        public void Reply(object reply, string color = "green")
+        public CommandContext(ICommandSender sender, string text, CommandManager manager, CommandModule module, CommandType source, CommandInfo command)
         {
-            if (IsServer)
-                Log.Add("COMMAND", $"{Command.Name.ToUpper()}#{reply}");
-            else
-                sender.SendConsoleMessage(reply.ToString(), color);
+            Manager = manager;
+            Module = module;
+            Sender = sender;
+            Text = text;
+            Source = source;   
+            Command = command; 
+
+            if (sender is Player player)
+                Player = player;
         }
 
-        /// <summary>
-        /// Sends a reply to the remote admin panel.
-        /// </summary>
-        /// <param name="reply">The response.</param>
-        /// <param name="success">Whether or not the command was sucessfuly executed.</param>
-        public void RaReply(object reply, bool success = true)
+        public void Reply(object reply, bool isError = false)
         {
-            if (IsServer)
-                Log.Add("COMMAND", $"{Command.Name.ToUpper()}#{reply}");
-            else
-                sender.Sender.Respond(reply.ToString(), success);
-        }
+            string str = reply.ToString();
 
-        public override void OnReturned()
-        {
-            cmd = null;
-            sender = null;
-            args = null;
+            if (string.IsNullOrEmpty(str))
+                return;
+
+            if (Sender.IsHost)
+            {
+                Log.Add($"{Command.Name}#", str, isError ? ConsoleColor.Red : ConsoleColor.Green);
+            }
+            else
+            {
+                if (Source == CommandType.PlayerConsole)
+                    Sender.ReplyConsole(reply, isError ? "red" : "green");
+                else
+                    Sender.Reply(reply, isError);
+            }
         }
     }
 }

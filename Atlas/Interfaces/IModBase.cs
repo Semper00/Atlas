@@ -29,7 +29,7 @@ namespace Atlas.Interfaces
         void Reload();
 
         void RegisterEvents<T>(T instance);
-        void RegisterCommands<T>(T instance);
+        void RegisterCommands<T>();
         void UnregisterCommmands<T>();
         void UnregisterEvents<T>();
         void UnregisterEvents();

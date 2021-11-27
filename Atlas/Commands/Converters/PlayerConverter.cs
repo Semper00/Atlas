@@ -1,14 +1,21 @@
-﻿using Atlas.Interfaces;
-using Atlas.Entities;
+﻿using Atlas.Entities;
+using Atlas.Commands.Enums;
+using Atlas.Commands.Converters.Results;
 
 namespace Atlas.Commands.Converters
 {
-    /// <summary>
-    /// A default <see cref="Player"/> converter.
-    /// </summary>
-    public class PlayerConverter : IConverter
+    public class PlayerConverter : Converter
     {
-        public object Convert(string value)
-            => PlayersList.Get(value);
+        public override ConverterResult Convert(CommandContext context, string input)
+        {
+            if (!PlayersList.TryGet(input, out Player player))
+            {
+                return ConverterResult.FromError(CommandError.ObjectNotFound, $"Failed to find that player.");
+            }
+            else
+            {
+                return ConverterResult.FromSuccess(player);
+            }
+        }
     }
 }

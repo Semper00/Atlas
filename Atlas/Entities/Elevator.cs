@@ -222,6 +222,13 @@ namespace Atlas.Entities
             }
         }
 
+        /// <summary>
+        /// Gets an elevator from it's type.
+        /// </summary>
+        /// <param name="type">The elevator's type.</param>
+        public static Elevator Get(ElevatorType type)
+            => Map.elevators.FirstOrDefault(x => x.Type == type);
+
         #region API
 
         internal static ElevatorType GetType(string elevatorName)

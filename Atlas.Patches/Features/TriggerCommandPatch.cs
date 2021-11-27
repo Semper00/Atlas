@@ -29,14 +29,16 @@ namespace Atlas.Patches.Features
 
                 query = ev.Query;
 
-                if (CommandManager.ExecuteCommand(ev.Source, ev.Player, ev.Query))
-                {
-                    Log.DebugFeature<CommandManager>($"Succesfully executed command: {query}");
+                var res = CommandManager.Execute(new CommandContext(ev.Player, ev.Query, null, null, Commands.Enums.CommandType.RemoteAdmin, null));
 
+                if (res.IsSuccess)
+                {
                     return false;
                 }
-
-                return true;
+                else
+                {
+                    return true;
+                }
             }
             catch (Exception e)
             {

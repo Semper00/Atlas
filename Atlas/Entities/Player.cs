@@ -21,6 +21,7 @@ using Atlas.Entities.Items;
 using Atlas.Entities.Pickups.Base;
 using Atlas.Entities.Items.Base;
 using Atlas.Toolkit;
+using Atlas.Commands.Interfaces;
 
 using InventorySystem;
 using InventorySystem.Disarming;
@@ -37,7 +38,7 @@ namespace Atlas.Entities
     /// <summary>
     /// A nice little wrapper around the <see cref="ReferenceHub"/> class to simplify interacting with players.
     /// </summary>
-    public class Player
+    public class Player : ICommandSender
     {
         internal RoleType? appearance;
 
@@ -1360,6 +1361,26 @@ namespace Atlas.Entities
         /// <param name="intensity">The intensity of the effect.</param>
         /// <param name="duration">The new length of the effect. Defaults to infinite length.</param>
         public void ChangeEffectIntensity(string effect, byte intensity, float duration = 0) => Hub.playerEffectsController.ChangeByString(effect, intensity, duration);
+
+        /// <summary>
+        /// Sends a message to the player's remote admin.
+        /// </summary>
+        /// <param name="reply">The message to send.</param>
+        /// <param name="isError">Whether or not an error occured.</param>
+        public void Reply(object reply, bool isError = false)
+        {
+            RaMessage(reply.ToString(), !isError);
+        }
+
+        /// <summary>
+        /// Sends a message to the player's console.
+        /// </summary>
+        /// <param name="reply">The message to send.</param>
+        /// <param name="color">Color of the message.</param>
+        public void ReplyConsole(object reply, string color = "green")
+        {
+            SendConsoleMessage(reply.ToString(), color);
+        }
 
         public override string ToString() => $"{PlayerId}: {(GlobalAdmin ? "[NW] " : " ")}{(DoNotTrack ? "[DNT] " : " ")}{(RemoteAdmin ? "[RA] " : "")} {Nickname} - {Role} - [{UserId}] ({IpAddress}) - {Latency} ms";
     }

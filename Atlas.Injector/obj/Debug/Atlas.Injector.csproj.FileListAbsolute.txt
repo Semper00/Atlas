@@ -6,3 +6,5 @@ C:\Users\Core\Documents\Atlas\Atlas.Injector\obj\Debug\Atlas.Injector.csproj.Cor
 C:\Users\Core\Documents\Atlas\Atlas.Injector\obj\Debug\Atlas.Injector.csproj.CopyComplete
 C:\Users\Core\Documents\Atlas\Atlas.Injector\obj\Debug\Atlas.Injector.exe
 C:\Users\Core\Documents\Atlas\Atlas.Injector\obj\Debug\Atlas.Injector.pdb
+C:\Users\Core\Documents\Atlas\Atlas.Injector\obj\Debug\Atlas.Injector.csproj.AssemblyReference.cache
+C:\Users\Core\Documents\Atlas\Atlas.Injector\obj\Debug\Atlas.Injector.csproj.SuggestedBindingRedirects.cache
